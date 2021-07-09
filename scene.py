@@ -38,7 +38,7 @@ def main():
     print("Method use: %s" % method_name)
     # Add fluid particles
     sph.add_cube(lower_corner=[res[0] / 2 / screen_to_world_ratio - 3, 4 * dx],
-                 cube_size=[6, 6],
+                 cube_size=[8, 8],
                  velocity=[0.0, -5.0],
                  density=[1000],
                  color=0x068587,
