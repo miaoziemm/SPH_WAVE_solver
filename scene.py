@@ -1,6 +1,6 @@
 # SPH taichi implementation by mzhang
 import taichi as ti
-from engine.sph_solver import *
+from sph_solver import *
 import argparse
 
 # Default run on CPU
