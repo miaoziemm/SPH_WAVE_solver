@@ -9,15 +9,25 @@ class WAVESolver:
     method_wave_equation=1
     method_wave_mesh_free=2
     methods={
-        'wave_equation':method_wave_equation,
-        'wave_mesh_free':method_wave_mesh_free
+        'wave_equation': method_wave_equation,
+        'wave_mesh_free': method_wave_mesh_free
     }
 
     def __init__(self,
                  c0,
                  fz,
                  during_t,
-                 source_position
+                 source_position,
+                 SPH
                  ):
         self.c0=c0
+        self.during_t=during_t
+        self.fz=fz
+        self.source_position=source_position
+
+
+
+
+
+
 
