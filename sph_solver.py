@@ -204,7 +204,7 @@ class SPHSolver:
             res = ti.atomic_and(res, (0 <= c[i] < self.grid_pos[i]))
         return res
 
-    @ti.func
+    @ti.pyfunc
     def is_fluid(self, p):
         # check fluid particle or bound particle
         return self.material[p]
@@ -760,6 +760,7 @@ class SPHSolver:
         if self.adaptive_time_step and self.method == SPHSolver.method_PCISPH:
             self.dt[None] = np.min([dt_cfl, dt_f])
 
+
     def step(self, frame, t, total_start):
         curr_start = time.process_time()
 
@@ -773,6 +774,16 @@ class SPHSolver:
             self.wc_compute_deltas()
             # timestep Update
             self.wc_update_time_step()
+            file_velocity = open('velocity.txt', mode='w+')
+            file_positions = open('positions.txt', mode='w+')
+            for p_i in range(self.particle_num[None]):
+                if self.is_fluid(p_i) == 1:
+                    file_velocity.write(self.particle_velocity)
+                    file_velocity.write('\n')
+                    file_positions.write(self.particle_velocity)
+                    file_positions.write('\n')
+            file_velocity.close()
+            file_positions.close()
         elif self.method == SPHSolver.methods['PCISPH']:
             # Compute viscosity and gravity force
             self.pci_compute_deltas()
@@ -943,6 +954,8 @@ class SPHSolver:
         self.fill(num_new_particles, new_positions, material, color)
         # Add to current particles count
         self.particle_num[None] += num_new_particles
+
+
 
     @ti.kernel
     def copy_dynamic_nd(self, np_x: ti.ext_arr(), input_x: ti.template()):
