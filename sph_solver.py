@@ -53,7 +53,7 @@ class SPHSolver:
         self.dx = dx  # Particle radius
         self.dh = self.dx * self.df_fac  # Smooth length
         # Declare dt as ti var for adaptive time step
-        self.dt = ti.var(ti.f32, shape=())
+        self.dt = ti.field(ti.f32, shape=())
         # Particle parameters
         self.m = self.dx**self.dim * self.rho_0
 
@@ -74,51 +74,51 @@ class SPHSolver:
 
         # ----------- PCISPH parameters-----------------
         # Scaling factor for PCISPH
-        self.s_f = ti.var(ti.f32, shape=())
+        self.s_f = ti.field(ti.f32, shape=())
         # Max iteration steps for pressure correction
         self.it = 0
         self.max_it = 0
         self.sub_max_iteration = 3
-        self.rho_err = ti.Vector(1, dt=ti.f32, shape=())
-        self.max_rho_err = ti.Vector(1, dt=ti.f32, shape=())
+        self.rho_err = ti.Vector.field(1, dtype=ti.f32, shape=())
+        self.max_rho_err = ti.Vector.field(1, dtype=ti.f32, shape=())
 
         # ----------- DFSPH parameters-----------------
         # Summing up the rho for all particles to compute the average rho
-        self.sum_rho_err = ti.var(ti.f32, shape=())
-        self.sum_drho = ti.var(ti.f32, shape=())
+        self.sum_rho_err = ti.field(ti.f32, shape=())
+        self.sum_drho = ti.field(ti.f32, shape=())
 
         # Dynamic Fill particles use
-        self.source_bound = ti.Vector(self.dim, dt=ti.f32, shape=2)
-        self.source_velocity = ti.Vector(self.dim, dt=ti.f32, shape=())
-        self.source_pressure = ti.Vector(1, dt=ti.f32, shape=())
-        self.source_density = ti.Vector(1, dt=ti.f32, shape=())
+        self.source_bound = ti.Vector.field(self.dim, dtype=ti.f32, shape=2)
+        self.source_velocity = ti.Vector.field(self.dim, dtype=ti.f32, shape=())
+        self.source_pressure = ti.Vector.field(1, dtype=ti.f32, shape=())
+        self.source_density = ti.Vector.field(1, dtype=ti.f32, shape=())
 
-        self.particle_num = ti.var(ti.i32, shape=())
-        self.particle_positions = ti.Vector(self.dim, dt=ti.f32)
-        self.particle_velocity = ti.Vector(self.dim, dt=ti.f32)
-        self.particle_positions_new = ti.Vector(
-            self.dim, dt=ti.f32)  # Prediction values for P-C scheme use
-        self.particle_velocity_new = ti.Vector(
-            self.dim, dt=ti.f32)  # Prediction values for P-C scheme use
-        self.particle_pressure = ti.Vector(1, dt=ti.f32)
-        self.particle_pressure_acc = ti.Vector(
-            self.dim, dt=ti.f32)  # pressure force for PCISPH use
-        self.particle_density = ti.Vector(1, dt=ti.f32)
-        self.particle_density_new = ti.Vector(
-            1, dt=ti.f32)  # Prediction values for P-C scheme use
-        self.particle_alpha = ti.Vector(1, dt=ti.f32)  # For DFSPH use
-        self.particle_stiff = ti.Vector(1, dt=ti.f32)  # For DFSPH use
+        self.particle_num = ti.field(ti.i32, shape=())
+        self.particle_positions = ti.Vector.field(self.dim, dtype=ti.f32)
+        self.particle_velocity = ti.Vector.field(self.dim, dtype=ti.f32)
+        self.particle_positions_new = ti.Vector.field(
+            self.dim, dtype=ti.f32)  # Prediction values for P-C scheme use
+        self.particle_velocity_new = ti.Vector.field(
+            self.dim, dtype=ti.f32)  # Prediction values for P-C scheme use
+        self.particle_pressure = ti.Vector.field(1, dtype=ti.f32)
+        self.particle_pressure_acc = ti.Vector.field(
+            self.dim, dtype=ti.f32)  # pressure force for PCISPH use
+        self.particle_density = ti.Vector.field(1, dtype=ti.f32)
+        self.particle_density_new = ti.Vector.field(
+            1, dtype=ti.f32)  # Prediction values for P-C scheme use
+        self.particle_alpha = ti.Vector.field(1, dtype=ti.f32)  # For DFSPH use
+        self.particle_stiff = ti.Vector.field(1, dtype=ti.f32)  # For DFSPH use
 
-        self.color = ti.var(dt=ti.f32)
-        self.material = ti.var(dt=ti.f32)
+        self.color = ti.field(dtype=ti.f32)
+        self.material = ti.field(dtype=ti.f32)
 
-        self.d_velocity = ti.Vector(self.dim, dt=ti.f32)
-        self.d_density = ti.Vector(1, dt=ti.f32)
+        self.d_velocity = ti.Vector.field(self.dim, dtype=ti.f32)
+        self.d_density = ti.Vector.field(1, dtype=ti.f32)
 
-        self.grid_num_particles = ti.var(ti.i32)
-        self.grid2particles = ti.var(ti.i32)
-        self.particle_num_neighbors = ti.var(ti.i32)
-        self.particle_neighbors = ti.var(ti.i32)
+        self.grid_num_particles = ti.field(ti.i32)
+        self.grid2particles = ti.field(ti.i32)
+        self.particle_num_neighbors = ti.field(ti.i32)
+        self.particle_neighbors = ti.field(ti.i32)
 
         self.max_num_particles_per_cell = 100
         self.max_num_neighbors = 100
@@ -763,7 +763,7 @@ class SPHSolver:
 
     def step(self, frame, t, total_start):
         curr_start = time.process_time()
-
+        # arr = np.ones(shape=(self.particle_num[None], 2, len(self.res)), dtype=np.float32)
         self.grid_num_particles.fill(0)
         self.particle_neighbors.fill(-1)
         self.allocate_particles()
@@ -774,16 +774,20 @@ class SPHSolver:
             self.wc_compute_deltas()
             # timestep Update
             self.wc_update_time_step()
-            file_velocity = open('velocity.txt', mode='w+')
-            file_positions = open('positions.txt', mode='w+')
-            for p_i in range(self.particle_num[None]):
-                if self.is_fluid(p_i) == 1:
-                    file_velocity.write(self.particle_velocity)
-                    file_velocity.write('\n')
-                    file_positions.write(self.particle_velocity)
-                    file_positions.write('\n')
-            file_velocity.close()
-            file_positions.close()
+            # file_velocity = open('velocity.txt', mode='w+')
+            # file_positions = open('positions.txt', mode='w+')
+            # for p_i in range(self.particle_num[None]):
+                # if self.is_fluid(p_i) == 1:
+                    # file_velocity.write(self.particle_velocity)
+                    # file_velocity.write('\n')
+                    # file_positions.write(self.particle_velocity)
+                    # file_positions.write('\n')
+            # file_velocity.close()
+            # file_positions.close()
+            # self.particle_velocity.from_numpy(arr)
+            # np.savetxt("out.txt", self.particle_velocity.to_numpy())
+
+
         elif self.method == SPHSolver.methods['PCISPH']:
             # Compute viscosity and gravity force
             self.pci_compute_deltas()
