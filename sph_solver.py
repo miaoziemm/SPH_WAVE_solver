@@ -774,6 +774,7 @@ class SPHSolver:
             self.wc_compute_deltas()
             # timestep Update
             self.wc_update_time_step()
+
             # file_velocity = open('velocity.txt', mode='w+')
             # file_positions = open('positions.txt', mode='w+')
             # for p_i in range(self.particle_num[None]):

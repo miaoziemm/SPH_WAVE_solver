@@ -43,6 +43,10 @@ def main():
                  density=[1000],
                  color=0x068587,
                  material=SPHSolver.material_fluid)
+    print(sph.particle_velocity.shape[0])
+    arr=sph.particle_density.to_numpy()
+    print(arr.shape)
+    np.savetxt("out.txt", arr)
 
     colors = np.array([0xED553B, 0x068587, 0xEEEEF0, 0xFFFF00],
                       dtype=np.uint32)
@@ -57,6 +61,7 @@ def main():
     while frame < max_frame and t < sim_physical_time:
         dt = sph.step(frame, t, total_start)
         particles = sph.particle_info()
+
 
         # if frame == 1000:
         if add and add_cnt > 0.40:
