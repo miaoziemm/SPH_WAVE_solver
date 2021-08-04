@@ -38,7 +38,7 @@ def main():
     print("Method use: %s" % method_name)
     # Add fluid particles
     sph.add_cube(lower_corner=[res[0] / 2 / screen_to_world_ratio - 3, 4 * dx],
-                 cube_size=[1, 1],
+                 cube_size=[8, 8],
                  velocity=[0.0, -5.0],
                  density=[1000],
                  color=0x068587,
@@ -51,7 +51,7 @@ def main():
     colors = np.array([0xED553B, 0x068587, 0xEEEEF0, 0xFFFF00],
                       dtype=np.uint32)
     add_cnt = 0.0
-    add = True
+    add = False
     save_cnt = 0.0
     output_fps = 60
     save_point = 1.0 / output_fps
@@ -61,6 +61,9 @@ def main():
     while frame < max_frame and t < sim_physical_time:
         dt = sph.step(frame, t, total_start)
         particles = sph.particle_info()
+        f_velocity="./velocity/velocity_%d.txt" % frame
+        arr_velocity=sph.particle_velocity.to_numpy()
+        np.savetxt(f_velocity, arr_velocity)
 
 
         # if frame == 1000:
