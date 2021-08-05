@@ -1,6 +1,6 @@
 # SPH taichi implementation by mzhang
 import taichi as ti
-from sph_solver import *
+from wave_sph_solver import *
 import argparse
 
 # Default run on CPU

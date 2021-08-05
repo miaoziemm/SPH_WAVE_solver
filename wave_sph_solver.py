@@ -120,6 +120,11 @@ class SPHSolver:
         self.particle_num_neighbors = ti.field(ti.i32)
         self.particle_neighbors = ti.field(ti.i32)
 
+        # WAVE module parameters
+        self.wave_pressure = ti.Vector.field(self.dim, dtype=ti.f32)
+        self.wave_velocity = ti.Vector.field(self.dim, dtype=ti.f32)
+        self.wave_density = ti.Vector.field(1, dtype=ti.f32)
+
         self.max_num_particles_per_cell = 100
         self.max_num_neighbors = 100
 
@@ -135,7 +140,8 @@ class SPHSolver:
                 self.particle_density_new, self.d_velocity, self.d_density,
                 self.material, self.color, self.particle_positions_new,
                 self.particle_velocity_new, self.particle_pressure_acc,
-                self.particle_alpha, self.particle_stiff)
+                self.particle_alpha, self.particle_stiff,
+                self.wave_pressure, self.wave_velocity, self.wave_density)
         else:
             # Allocate enough memory
             ti.root.dense(ti.i, 2**18).place(
@@ -144,7 +150,8 @@ class SPHSolver:
                 self.particle_density_new, self.d_velocity, self.d_density,
                 self.material, self.color, self.particle_positions_new,
                 self.particle_velocity_new, self.particle_pressure_acc,
-                self.particle_alpha, self.particle_stiff)
+                self.particle_alpha, self.particle_stiff,
+                self.wave_pressure, self.wave_velocity, self.wave_density)
 
         if self.dim == 2:
             grid_snode = ti.root.dense(ti.ij, self.grid_pos)
