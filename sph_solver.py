@@ -960,6 +960,24 @@ class SPHSolver:
         # Add to current particles count
         self.particle_num[None] += num_new_particles
 
+    def add_file(self,path_position, path_velocity, path_density, path_pressure, frame):
+        path_position = "./position/position_%d.txt" % frame
+        path_velocity = "./velocity/velocity_%d.txt" % frame
+        path_density = "./density/density_%d.txt" % frame
+        path_pressure = "./pressure/pressure_%d.txt" % frame
+
+        arr_position=np.loadtxt(path_position)
+        arr_velocity=np.loadtxt(path_velocity)
+        arr_density=np.loadtxt(path_density)
+        arr_pressure=np.loadtxt(path_pressure)
+
+        num_new_particles=np.nonzero(arr_density)
+
+
+        self.particle_positions=
+
+        self.particle_num[None] += num_new_particles
+
 
 
     @ti.kernel

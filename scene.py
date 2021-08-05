@@ -43,10 +43,6 @@ def main():
                  density=[1000],
                  color=0x068587,
                  material=SPHSolver.material_fluid)
-    print(sph.particle_velocity.shape[0])
-    arr=sph.particle_density.to_numpy()
-    print(arr.shape)
-    np.savetxt("out.txt", arr)
 
     colors = np.array([0xED553B, 0x068587, 0xEEEEF0, 0xFFFF00],
                       dtype=np.uint32)
@@ -62,8 +58,17 @@ def main():
         dt = sph.step(frame, t, total_start)
         particles = sph.particle_info()
         f_velocity="./velocity/velocity_%d.txt" % frame
+        f_density = "./density/density_%d.txt" % frame
+        f_position="./position/position_%d.txt" % frame
+        f_pressure = "./pressure/pressure_%d.txt" % frame
         arr_velocity=sph.particle_velocity.to_numpy()
+        arr_density = sph.particle_density.to_numpy()
+        arr_position = sph.particle_positions.to_numpy()
+        arr_pressure=sph.particle_pressure.to_numpy()
         np.savetxt(f_velocity, arr_velocity)
+        np.savetxt(f_density, arr_density)
+        np.savetxt(f_position, arr_position)
+        np.savetxt(f_pressure, arr_pressure)
 
 
         # if frame == 1000:
@@ -95,11 +100,11 @@ def main():
 
         # Save in fixed frame interval, for fixed time step
         if not adaptive_time_step and frame % 50 == 0:
-            gui.show(f'{frame:06d}.png' if save_frames else None)
+            gui.show(f'./pic/{frame:06d}.png' if save_frames else None)
 
         # Save in fixed frame per second, for adaptive time step
         if adaptive_time_step and save_cnt >= save_point:
-            gui.show(f'{frame:06d}.png' if save_frames else None)
+            gui.show(f'./pic/{frame:06d}.png' if save_frames else None)
             save_cnt = 0.0
 
         frame += 1
