@@ -1010,3 +1010,6 @@ class SPHSolver:
             'material': np_material,
             'color': np_color
         }
+
+    ## WAVE module
+
