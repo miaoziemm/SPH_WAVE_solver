@@ -44,6 +44,7 @@ def main():
                  color=0x068587,
                  material=SPHSolver.material_fluid)
 
+
     colors = np.array([0xED553B, 0x068587, 0xEEEEF0, 0xFFFF00],
                       dtype=np.uint32)
     add_cnt = 0.0

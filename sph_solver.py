@@ -973,8 +973,10 @@ class SPHSolver:
 
         num_new_particles=np.nonzero(arr_density)
 
-
-        self.particle_positions=
+        self.particle_positions.from_numpy(arr_position)
+        self.particle_velocity.from_numpy(arr_velocity)
+        self.particle_density.from_numpy(arr_density)
+        self.particle_pressure.from_numopy(arr_pressure)
 
         self.particle_num[None] += num_new_particles
 
