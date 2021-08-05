@@ -1019,4 +1019,37 @@ class SPHSolver:
         }
 
     ## WAVE module
+    @ti.kernel
+    def wave_compute_delta(self):
+        for p_i in range(self.particle_num[None]):
+            pos_i = self.particle_positions[p_i]
+            d_v = ti.Vector([0.0 for _ in range(self.dim)])
+            d_rho = 0.0
+            for j in range(self.particle_num_neighbors[p_i]):
+                p_j = self.particle_neighbors[p_i, j]
+                pos_j = self.particle_positions[p_j]
+
+                # Compute distance and its mod
+                r = pos_i - pos_j
+                r_mod = ti.max(r.norm(), 1e-5)
+
+                # Compute Density change
+                d_rho += self.rho_derivative(p_i, p_j, r, r_mod)
+
+                if self.is_fluid(p_i) == 1:
+                    # Compute Viscosity force contribution
+                    d_v += self.viscosity_force(p_i, p_j, r, r_mod)
+
+                    # Compute Pressure force contribution
+                    d_v += self.pressure_force(p_i, p_j, r, r_mod)
+
+            # Add body force
+            if self.is_fluid(p_i) == 1:
+                val = [0.0 for _ in range(self.dim - 1)]
+                val.extend([self.g])
+                d_v += ti.Vector(val, dt=ti.f32)
+            self.d_velocity[p_i] = d_v
+            self.d_density[p_i][0] = d_rho
+
+
 
