@@ -31,6 +31,7 @@ class SPHSolver:
                  dynamic_allocate=False,
                  adaptive_time_step=True,
                  method=0):
+        self.vp=1500
         self.method = method
         self.adaptive_time_step = adaptive_time_step
         self.dim = len(res)
@@ -1019,11 +1020,29 @@ class SPHSolver:
         }
 
     ## WAVE module
+
+    @ti.func
+    def wave_d_pressure(self, ptc_i, ptc_j, r, r_mod):
+        wave_d_pressure=self.m*self.dt*self.vp**2*self.particle_density[ptc_i]/self.particle_density[ptc_j]* \
+                   (self.particle_velocity[ptc_i] - self.particle_velocity[ptc_j]+(self.wave_velocity[ptc_i] - self.wave_velocity[ptc_j])).dot(r / r_mod)* \
+                   self.cubic_kernel_derivative(r_mod, self.dh)
+        return wave_d_pressure
+    @ti.func
+    def wave_d_velocity(self, ptc_i, ptc_j, r, r_mod):
+        wave_d_velocity=self.dt/self.particle_density[ptc_i]*self.m/self.particle_density[ptc_j]*\
+                        (self.wave_pressure[ptc_i]+self.wave_pressure[ptc_j])*self.cubic_kernel_derivative(r_mod, self.dh)
+        return wave_d_velocity
+
+    @ti.func
+    def wave_ricker(self, t, fz, ptc):
+
+        return 0
+
     @ti.kernel
     def wave_compute_delta(self):
         for p_i in range(self.particle_num[None]):
             pos_i = self.particle_positions[p_i]
-            d_v = ti.Vector([0.0 for _ in range(self.dim)])
+            d_v_wave = ti.Vector([0.0 for _ in range(self.dim)])
             d_rho = 0.0
             for j in range(self.particle_num_neighbors[p_i]):
                 p_j = self.particle_neighbors[p_i, j]
@@ -1038,10 +1057,10 @@ class SPHSolver:
 
                 if self.is_fluid(p_i) == 1:
                     # Compute Viscosity force contribution
-                    d_v += self.viscosity_force(p_i, p_j, r, r_mod)
+                    d_v_wave += self.viscosity_force(p_i, p_j, r, r_mod)
 
                     # Compute Pressure force contribution
-                    d_v += self.pressure_force(p_i, p_j, r, r_mod)
+                    d_v_wave += self.pressure_force(p_i, p_j, r, r_mod)
 
             # Add body force
             if self.is_fluid(p_i) == 1:
