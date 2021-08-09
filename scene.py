@@ -57,6 +57,7 @@ def main():
     total_start = time.process_time()
     while frame < max_frame and t < sim_physical_time:
         dt = sph.step(frame, t, total_start)
+
         particles = sph.particle_info()
         f_velocity="./velocity/velocity_%d.txt" % frame
         f_density = "./density/density_%d.txt" % frame
@@ -70,6 +71,7 @@ def main():
         np.savetxt(f_density, arr_density)
         np.savetxt(f_position, arr_position)
         np.savetxt(f_pressure, arr_pressure)
+
 
 
         # if frame == 1000:

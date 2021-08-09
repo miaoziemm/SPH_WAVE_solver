@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import time
 from functools import reduce
@@ -125,6 +127,8 @@ class SPHSolver:
         self.wave_pressure = ti.Vector.field(self.dim, dtype=ti.f32)
         self.wave_velocity = ti.Vector.field(self.dim, dtype=ti.f32)
         self.wave_density = ti.Vector.field(1, dtype=ti.f32)
+        self.wave_dd_pressure = ti.Vector.field(self.dim, dtype=ti.f32)
+        self.wave_dd_velocity = ti.Vector.field(self.dim, dtype=ti.f32)
 
         self.max_num_particles_per_cell = 100
         self.max_num_neighbors = 100
@@ -1027,6 +1031,7 @@ class SPHSolver:
                    (self.particle_velocity[ptc_i] - self.particle_velocity[ptc_j]+(self.wave_velocity[ptc_i] - self.wave_velocity[ptc_j])).dot(r / r_mod)* \
                    self.cubic_kernel_derivative(r_mod, self.dh)
         return wave_d_pressure
+
     @ti.func
     def wave_d_velocity(self, ptc_i, ptc_j, r, r_mod):
         wave_d_velocity=self.dt/self.particle_density[ptc_i]*self.m/self.particle_density[ptc_j]*\
@@ -1034,16 +1039,15 @@ class SPHSolver:
         return wave_d_velocity
 
     @ti.func
-    def wave_ricker(self, t, fz, ptc):
-
-        return 0
+    def wave_ricker(self, t, fm):
+        wave_ricker = (1-2*(math.pi*fm*t)**2)*math.exp(-(math.pi*fm*t)**2)
+        return wave_ricker
 
     @ti.kernel
     def wave_compute_delta(self):
         for p_i in range(self.particle_num[None]):
             pos_i = self.particle_positions[p_i]
-            d_v_wave = ti.Vector([0.0 for _ in range(self.dim)])
-            d_rho = 0.0
+            d_p_wave = ti.Vector([0.0 for _ in range(self.dim)])
             for j in range(self.particle_num_neighbors[p_i]):
                 p_j = self.particle_neighbors[p_i, j]
                 pos_j = self.particle_positions[p_j]
@@ -1052,23 +1056,30 @@ class SPHSolver:
                 r = pos_i - pos_j
                 r_mod = ti.max(r.norm(), 1e-5)
 
-                # Compute Density change
-                d_rho += self.rho_derivative(p_i, p_j, r, r_mod)
+                if self.is_fluid(p_i) == 1:
+                    # Compute Viscosity force contribution
+                    d_p_wave += self.wave_dd_pressure(p_i, p_j, r, r_mod)
+            self.wave_dd_pressure[p_i] = d_p_wave
+
+        for p_i in range(self.particle_num[None]):
+            pos_i = self.particle_positions[p_i]
+            d_v_wave = ti.Vector([0.0 for _ in range(self.dim)])
+            for j in range(self.particle_num_neighbors[p_i]):
+                p_j = self.particle_neighbors[p_i, j]
+                pos_j = self.particle_positions[p_j]
+
+                # Compute distance and its mod
+                r = pos_i - pos_j
+                r_mod = ti.max(r.norm(), 1e-5)
 
                 if self.is_fluid(p_i) == 1:
                     # Compute Viscosity force contribution
-                    d_v_wave += self.viscosity_force(p_i, p_j, r, r_mod)
+                    d_v_wave += self.wave_dd_velocity(p_i, p_j, r, r_mod)
 
-                    # Compute Pressure force contribution
-                    d_v_wave += self.pressure_force(p_i, p_j, r, r_mod)
+            self.wave_dd_velocity[p_i] = d_v_wave
 
-            # Add body force
-            if self.is_fluid(p_i) == 1:
-                val = [0.0 for _ in range(self.dim - 1)]
-                val.extend([self.g])
-                d_v += ti.Vector(val, dt=ti.f32)
-            self.d_velocity[p_i] = d_v
-            self.d_density[p_i][0] = d_rho
+
+
 
 
 
