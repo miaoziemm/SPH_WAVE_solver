@@ -787,20 +787,6 @@ class SPHSolver:
             # timestep Update
             self.wc_update_time_step()
 
-            # file_velocity = open('velocity.txt', mode='w+')
-            # file_positions = open('positions.txt', mode='w+')
-            # for p_i in range(self.particle_num[None]):
-                # if self.is_fluid(p_i) == 1:
-                    # file_velocity.write(self.particle_velocity)
-                    # file_velocity.write('\n')
-                    # file_positions.write(self.particle_velocity)
-                    # file_positions.write('\n')
-            # file_velocity.close()
-            # file_positions.close()
-            # self.particle_velocity.from_numpy(arr)
-            # np.savetxt("out.txt", self.particle_velocity.to_numpy())
-
-
         elif self.method == SPHSolver.methods['PCISPH']:
             # Compute viscosity and gravity force
             self.pci_compute_deltas()
