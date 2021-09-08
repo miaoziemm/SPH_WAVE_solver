@@ -39,8 +39,8 @@ def main():
     print("Method use: %s" % method_name)
     # Add fluid particles
     #sph.add_cube(lower_corner=[res[0] / 2 / screen_to_world_ratio - 3, 2 * dx],cube_size=[6, 6],velocity=[0.0, 0.0],density=[1000],color=0x068587,material=SPHSolver.material_fluid)
-    #sph.add_cube(lower_corner=[0.2, 0.2],cube_size=[11, 11],velocity=[0.0, 0.0],density=[1000],color=0x068587,material=SPHSolver.material_fluid)
-    sph.add_file(10000,material=SPHSolver.material_fluid,color=0x068587)
+    sph.add_cube(lower_corner=[0.2, 0.2],cube_size=[11, 11],velocity=[0.0, 0.0],density=[1000],color=0x068587,material=SPHSolver.material_fluid)
+    #sph.add_file(10000,material=SPHSolver.material_fluid,color=0x068587)
     #print(sph.particle_pressure)
     #print(sph.particle_density)
     #print(sph.particle_velocity)
